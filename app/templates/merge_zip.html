@@ -1,0 +1,886 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unificar PDF + ZIP | Unificador de Archivos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --azul-oscuro: #162b47;
+            --azul-medio: #105788;
+            --rojo: #e51148;
+            --gris: #e0e5e5;
+            --blanco: #ffffff;
+            --negro: #000000;
+            --gradiente-header: linear-gradient(135deg, #162b47 0%, #0d1f35 100%);
+            --sombra-suave: 0 4px 24px rgba(22, 43, 71, 0.10);
+            --sombra-media: 0 8px 40px rgba(22, 43, 71, 0.16);
+            --sombra-fuerte: 0 16px 56px rgba(22, 43, 71, 0.22);
+            --borde-redondo: 18px;
+            --borde-redondo-sm: 12px;
+            --transicion: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transicion-lenta: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', 'Calibri', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(180deg, #f5f7fa 0%, #e8edf2 100%);
+            min-height: 100vh;
+            color: var(--negro);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            background: var(--gradiente-header);
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: 0 4px 32px rgba(22, 43, 71, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: contain;
+            background: var(--blanco);
+            padding: 6px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+            transition: transform var(--transicion);
+        }
+        .header-logo:hover {
+            transform: scale(1.08) rotate(-3deg);
+        }
+        .header-biocore {
+            height: 64px;
+            width: auto;
+            object-fit: contain;
+            margin-left: 8px;
+            filter: drop-shadow(0 6px 20px rgba(0,0,0,0.28));
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-group { display:flex; align-items:center; gap:8px; }
+        .header-text { display:flex; flex-direction:column; }
+        .header-subtitle { font-size:0.85rem; color: rgba(255,255,255,0.92); font-weight:600; margin-top:2px; }
+        .header { padding: 14px 36px; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; }
+        .header-titulo {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 900;
+            font-size: 1.55rem;
+            color: var(--blanco);
+            letter-spacing: -0.3px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            white-space: nowrap;
+        }
+        .header-titulo span {
+            color: var(--rojo);
+            font-weight: 900;
+        }
+        .header-nav {
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header-nav a {
+            text-decoration: none;
+        }
+        .btn-nav {
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--blanco);
+            transition: all var(--transicion);
+            font-family: 'Nunito Sans', sans-serif;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+        }
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+        }
+        .btn-nav.activo {
+            background: var(--rojo);
+            border-color: var(--rojo);
+            color: var(--blanco);
+            box-shadow: 0 4px 20px rgba(229, 17, 72, 0.45);
+        }
+
+        /* ========== CONTENEDOR PRINCIPAL ========== */
+        .main-container {
+            max-width: 780px;
+            margin: 36px auto 50px;
+            padding: 0 24px;
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(36px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tarjeta {
+            background: var(--blanco);
+            border-radius: var(--borde-redondo);
+            padding: 32px 30px;
+            box-shadow: var(--sombra-suave);
+            margin-bottom: 24px;
+            border: 1px solid rgba(22, 43, 71, 0.04);
+            transition: all var(--transicion-lenta);
+            position: relative;
+            overflow: hidden;
+        }
+        .tarjeta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--azul-oscuro) 0%, var(--azul-medio) 50%, var(--rojo) 100%);
+            border-radius: var(--borde-redondo) var(--borde-redondo) 0 0;
+        }
+        .tarjeta:hover {
+            box-shadow: var(--sombra-media);
+            transform: translateY(-2px);
+        }
+        .tarjeta h2 {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            color: var(--azul-oscuro);
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+        .tarjeta .subtitulo {
+            color: #5a6b7c;
+            font-size: 0.95rem;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        /* ========== ZONA DROP ========== */
+        .drop-zone {
+            border: 2.5px dashed #c5cfd9;
+            border-radius: var(--borde-redondo-sm);
+            padding: 38px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transicion);
+            background: #fafbfc;
+            position: relative;
+            margin-bottom: 16px;
+            user-select: none;
+        }
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--azul-medio);
+            background: #f0f6fb;
+            box-shadow: inset 0 0 0 4px rgba(16, 87, 136, 0.06);
+            transform: scale(1.012);
+        }
+        .drop-zone.drag-over {
+            border-color: var(--rojo);
+            background: #fef5f7;
+            box-shadow: inset 0 0 0 4px rgba(229, 17, 72, 0.07);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: inset 0 0 0 4px rgba(229, 17, 72, 0.07); }
+            50% { box-shadow: inset 0 0 0 12px rgba(229, 17, 72, 0.03); }
+        }
+        .drop-zone i {
+            font-size: 2.8rem;
+            color: #bcc7d4;
+            transition: all var(--transicion);
+            display: block;
+            margin-bottom: 6px;
+        }
+        .drop-zone:hover i,
+        .drop-zone.drag-over i {
+            color: var(--azul-medio);
+            animation: bounceIcon 0.5s ease;
+        }
+        @keyframes bounceIcon {
+            0%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-14px); }
+            50% { transform: translateY(0); }
+            70% { transform: translateY(-6px); }
+        }
+        .drop-zone .drop-texto {
+            font-weight: 700;
+            color: #4a5b6c;
+            font-size: 1rem;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+        .drop-zone .drop-subtexto {
+            font-size: 0.82rem;
+            color: #8a9aaa;
+            margin-top: 2px;
+        }
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+
+        /* ========== LISTA DE ARCHIVOS CARGADOS ========== */
+        .lista-archivos {
+            list-style: none;
+            margin: 12px 0 20px;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .lista-archivos li {
+            background: #f1f5f9;
+            border-radius: 28px;
+            padding: 9px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            animation: popIn 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+            border: 1px solid #e2e8f0;
+            transition: all var(--transicion);
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.7); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .lista-archivos li:hover {
+            background: #e8f0f8;
+            border-color: var(--azul-medio);
+        }
+        .lista-archivos li i {
+            font-size: 1rem;
+        }
+        .lista-archivos li .fa-file-pdf { color: #e51148; }
+        .lista-archivos li .fa-file-zipper { color: #b8600c; }
+        .btn-remover-archivo {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9aaabb;
+            font-size: 0.85rem;
+            padding: 2px 4px;
+            border-radius: 50%;
+            transition: all var(--transicion);
+            line-height: 1;
+        }
+        .btn-remover-archivo:hover {
+            color: var(--rojo);
+            background: rgba(229, 17, 72, 0.08);
+        }
+        .sin-archivos {
+            color: #b0bfce;
+            font-style: italic;
+            font-size: 0.9rem;
+            margin: 8px 0 16px;
+            text-align: center;
+        }
+
+        /* ========== BOTONES ========== */
+        .btn-accion {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transicion);
+            font-family: 'Nunito Sans', sans-serif;
+            letter-spacing: 0.2px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-accion::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0);
+            transition: background var(--transicion);
+            border-radius: 30px;
+        }
+        .btn-accion:hover::after {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .btn-primario {
+            background: var(--rojo);
+            color: var(--blanco);
+            box-shadow: 0 6px 24px rgba(229, 17, 72, 0.35);
+        }
+        .btn-primario:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(229, 17, 72, 0.5);
+        }
+        .btn-secundario {
+            background: var(--azul-medio);
+            color: var(--blanco);
+            box-shadow: 0 6px 24px rgba(16, 87, 136, 0.3);
+        }
+        .btn-secundario:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(16, 87, 136, 0.45);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--azul-medio);
+            color: var(--azul-medio);
+        }
+        .btn-outline:hover {
+            background: var(--azul-medio);
+            color: var(--blanco);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(16, 87, 136, 0.3);
+        }
+        .btn-descarga {
+            background: var(--azul-oscuro);
+            color: var(--blanco);
+            box-shadow: 0 6px 24px rgba(22, 43, 71, 0.35);
+            font-size: 1.05rem;
+            padding: 14px 32px;
+        }
+        .btn-descarga:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(22, 43, 71, 0.5);
+        }
+        .btn-agregar {
+            background: transparent;
+            border: 2px dashed #c5cfd9;
+            color: #5a6b7c;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all var(--transicion);
+            font-family: 'Nunito Sans', sans-serif;
+        }
+        .btn-agregar:hover {
+            border-color: var(--azul-medio);
+            color: var(--azul-medio);
+            background: #f6fafd;
+        }
+
+        /* ========== OVERLAY DE CARGA ========== */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(22, 43, 71, 0.75);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(6px);
+        }
+        #loadingOverlay.active {
+            display: flex;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .spinner-futurista {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, var(--blanco) 20%, var(--rojo) 50%, transparent 70%);
+            animation: spinFuturista 0.9s linear infinite;
+            position: relative;
+            box-shadow: 0 0 40px rgba(229, 17, 72, 0.5), 0 0 80px rgba(255, 255, 255, 0.25);
+        }
+        .spinner-futurista::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            background: rgba(22, 43, 71, 0.9);
+            border-radius: 50%;
+        }
+        @keyframes spinFuturista {
+            to { transform: rotate(360deg); }
+        }
+        #loadingOverlay p {
+            color: var(--blanco);
+            font-weight: 700;
+            margin-top: 20px;
+            font-size: 1.05rem;
+            letter-spacing: 0.3px;
+            font-family: 'Nunito Sans', sans-serif;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            animation: textoPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes textoPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        /* ========== MODALES ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(22, 43, 71, 0.7);
+            z-index: 1800;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background: var(--blanco);
+            padding: 32px 28px;
+            border-radius: var(--borde-redondo);
+            width: 420px;
+            max-width: 92vw;
+            text-align: center;
+            box-shadow: var(--sombra-fuerte);
+            animation: modalPop 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.8) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-content .icono-exito {
+            font-size: 3.5rem;
+            color: #22c55e;
+            margin-bottom: 12px;
+            animation: bounceIcon 0.7s ease;
+        }
+        .modal-content h3 {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 800;
+            color: var(--azul-oscuro);
+            margin-bottom: 6px;
+            font-size: 1.3rem;
+        }
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 30px;
+            border: 2px solid #dde4ed;
+            font-size: 1rem;
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 600;
+            margin: 12px 0;
+            outline: none;
+            transition: var(--transicion);
+        }
+        .modal-content input[type="text"]:focus {
+            border-color: var(--azul-medio);
+            box-shadow: 0 0 0 6px rgba(16, 87, 136, 0.08);
+        }
+        .modal-content button {
+            margin-top: 8px;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: var(--azul-medio);
+            color: var(--blanco);
+            font-family: 'Nunito Sans', sans-serif;
+            transition: all var(--transicion);
+            font-size: 0.95rem;
+        }
+        .modal-content button:hover {
+            background: var(--azul-oscuro);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(22, 43, 71, 0.4);
+        }
+        .btn-cerrar-modal {
+            background: transparent;
+            border: 2px solid var(--gris);
+            color: #5a6b7c;
+            margin-left: 8px;
+        }
+        .btn-cerrar-modal:hover {
+            background: var(--gris);
+            color: var(--negro);
+            box-shadow: none;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 640px) {
+            .header {
+                padding: 12px 16px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .header-titulo { font-size: 1.15rem; }
+            .header-nav { gap: 6px; }
+            .btn-nav { padding: 8px 14px; font-size: 0.78rem; }
+            .tarjeta { padding: 22px 16px; }
+            .drop-zone { padding: 24px 14px; }
+            .btn-accion { padding: 11px 20px; font-size: 0.9rem; }
+            .main-container { margin: 20px auto 40px; padding: 0 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-group">
+                <img src="{% static 'img/logo_biocore_blanco.png' %}" alt="Biocore" class="header-biocore" onerror="this.style.display='none'">
+            </div>
+            <div class="header-text">
+                <span class="header-titulo">Unificador de Archivos <span>a PDF</span></span>
+                <span class="header-subtitle">Combina y nombra tus documentos en segundos</span>
+            </div>
+        </div>
+        <nav class="header-nav">
+            <a href="{% url 'merge_zip' %}"><button class="btn-nav activo"><i class="fas fa-file-zipper"></i>&nbsp; Con ZIP</button></a>
+            <a href="{% url 'merge_excel' %}"><button class="btn-nav"><i class="fas fa-file-excel"></i>&nbsp; Con Excel</button></a>
+        </nav>
+    </header>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <div class="main-container">
+        <div class="tarjeta">
+            <h2><i class="fas fa-layer-group" style="color:var(--azul-medio); margin-right:6px;"></i> Unificar PDF + ZIP</h2>
+            <p class="subtitulo">Carga tus archivos PDF y un archivo ZIP. Luego asigna un nombre personalizado al PDF unificado.</p>
+
+            {% if error %}
+            <div style="background:#fef2f2; border-left:4px solid var(--rojo); padding:12px 16px; border-radius:8px; margin-bottom:16px; color:#991b1b; font-weight:600;">
+                <i class="fas fa-circle-exclamation"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'merge_zip' %}">
+                {% csrf_token %}
+
+                <!-- Zona de carga de PDFs -->
+                <label style="font-weight:700; color:var(--azul-oscuro); display:block; margin-bottom:8px;">
+                    <i class="fas fa-file-pdf" style="color:var(--rojo);"></i> Cargar archivos PDF
+                </label>
+                <div class="drop-zone" id="dropZonePdf">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <p class="drop-texto">Arrastra tus PDFs aquí</p>
+                    <p class="drop-subtexto">o haz clic para seleccionarlos</p>
+                    <input type="file" id="pdfInputHidden" accept=".pdf" multiple style="display:none;">
+                </div>
+                <ul class="lista-archivos" id="listaPdfs"></ul>
+                <p class="sin-archivos" id="sinPdfsMsg">No se han cargado archivos PDF aún.</p>
+                <div id="pdfInputsContainer"></div>
+                <button type="button" class="btn-agregar" id="btnAgregarPdf" style="margin-bottom:18px;">
+                    <i class="fas fa-plus-circle"></i> Agregar más PDFs
+                </button>
+
+                <!-- Zona de carga de ZIP -->
+                <label style="font-weight:700; color:var(--azul-oscuro); display:block; margin-bottom:8px;">
+                    <i class="fas fa-file-zipper" style="color:#b8600c;"></i> Cargar archivo ZIP
+                </label>
+                <div class="drop-zone" id="dropZoneZip" style="border-style:dashed;">
+                    <i class="fas fa-file-archive"></i>
+                    <p class="drop-texto">Arrastra el archivo ZIP aquí</p>
+                    <p class="drop-subtexto">o haz clic para seleccionarlo</p>
+                    <input type="file" id="zipInputHidden" accept=".zip" style="display:none;">
+                </div>
+                <ul class="lista-archivos" id="listaZip"></ul>
+                <p class="sin-archivos" id="sinZipMsg">No se ha cargado archivo ZIP aún.</p>
+                <div id="zipInputContainer"></div>
+
+                <div style="text-align:center; margin-top:24px;">
+                    <button type="submit" class="btn-accion btn-primario" id="submitBtn">
+                        <i class="fas fa-wand-magic-sparkles"></i> Unificar y continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== OVERLAY DE CARGA ==================== -->
+    <div id="loadingOverlay">
+        <div class="spinner-futurista"></div>
+        <p>Procesando archivos, por favor espere...</p>
+    </div>
+
+    <!-- ==================== MODAL PARA NOMBRE ==================== -->
+    <div id="nameModal" class="modal-overlay {% if show_modal %}active{% endif %}">
+        <div class="modal-content">
+            <h3><i class="fas fa-pen-to-square" style="color:var(--azul-medio);"></i> Nombre del PDF unificado</h3>
+            <p style="color:#5a6b7c; margin-bottom:8px;">Asigna un nombre personalizado al archivo final.</p>
+            <form id="nameForm">
+                {% csrf_token %}
+                <input type="text" id="pdfName" name="nombre" value="{{ default_name }}" placeholder="Ej: Informe_Final">
+                <br>
+                <button type="submit"><i class="fas fa-download"></i> Descargar PDF</button>
+                <button type="button" class="btn-cerrar-modal" onclick="cerrarModalNombre()"><i class="fas fa-times"></i> Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL DE ÉXITO ==================== -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="icono-exito"><i class="fas fa-circle-check"></i></div>
+            <h3>¡PDF descargado con éxito!</h3>
+            <p style="color:#5a6b7c;">Tu documento unificado está listo.</p>
+            <button onclick="cerrarModalExito()"><i class="fas fa-check"></i> Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GESTIÓN DE PDFs (múltiples) ====================
+        const dropZonePdf = document.getElementById('dropZonePdf');
+        const pdfInputHidden = document.getElementById('pdfInputHidden');
+        const listaPdfs = document.getElementById('listaPdfs');
+        const sinPdfsMsg = document.getElementById('sinPdfsMsg');
+        const pdfInputsContainer = document.getElementById('pdfInputsContainer');
+        const btnAgregarPdf = document.getElementById('btnAgregarPdf');
+        let pdfFilesArray = [];
+
+        function actualizarListaPdfs() {
+            listaPdfs.innerHTML = '';
+            pdfInputsContainer.innerHTML = '';
+            if (pdfFilesArray.length === 0) {
+                sinPdfsMsg.style.display = 'block';
+                listaPdfs.style.display = 'none';
+            } else {
+                sinPdfsMsg.style.display = 'none';
+                listaPdfs.style.display = 'flex';
+                pdfFilesArray.forEach((file, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <i class="fas fa-file-pdf"></i> ${file.name}
+                        <button type="button" class="btn-remover-archivo" data-index="${index}" title="Quitar">
+                            <i class="fas fa-times-circle"></i>
+                        </button>`;
+                    listaPdfs.appendChild(li);
+                    // Input oculto para el formulario
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'file';
+                    hiddenInput.name = 'pdf_' + index;
+                    hiddenInput.accept = '.pdf';
+                    hiddenInput.style.display = 'none';
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    hiddenInput.files = dt.files;
+                    pdfInputsContainer.appendChild(hiddenInput);
+                });
+                listaPdfs.querySelectorAll('.btn-remover-archivo').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        pdfFilesArray.splice(idx, 1);
+                        actualizarListaPdfs();
+                    });
+                });
+            }
+        }
+
+        function agregarPdfsDesdeInput(files) {
+            for (const file of files) {
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    pdfFilesArray.push(file);
+                }
+            }
+            actualizarListaPdfs();
+            pdfInputHidden.value = '';
+        }
+
+        dropZonePdf.addEventListener('click', () => pdfInputHidden.click());
+        btnAgregarPdf.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pdfInputHidden.click();
+        });
+        pdfInputHidden.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) agregarPdfsDesdeInput(e.target.files);
+        });
+
+        dropZonePdf.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZonePdf.classList.add('drag-over');
+        });
+        dropZonePdf.addEventListener('dragleave', () => dropZonePdf.classList.remove('drag-over'));
+        dropZonePdf.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZonePdf.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) agregarPdfsDesdeInput(e.dataTransfer.files);
+        });
+
+        // ==================== GESTIÓN DE ZIP ====================
+        const dropZoneZip = document.getElementById('dropZoneZip');
+        const zipInputHidden = document.getElementById('zipInputHidden');
+        const listaZip = document.getElementById('listaZip');
+        const sinZipMsg = document.getElementById('sinZipMsg');
+        const zipInputContainer = document.getElementById('zipInputContainer');
+        let zipFile = null;
+
+        function actualizarListaZip() {
+            listaZip.innerHTML = '';
+            zipInputContainer.innerHTML = '';
+            if (!zipFile) {
+                sinZipMsg.style.display = 'block';
+                listaZip.style.display = 'none';
+            } else {
+                sinZipMsg.style.display = 'none';
+                listaZip.style.display = 'flex';
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <i class="fas fa-file-zipper"></i> ${zipFile.name}
+                    <button type="button" class="btn-remover-archivo" title="Quitar">
+                        <i class="fas fa-times-circle"></i>
+                    </button>`;
+                listaZip.appendChild(li);
+                li.querySelector('.btn-remover-archivo').addEventListener('click', () => {
+                    zipFile = null;
+                    actualizarListaZip();
+                });
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.name = 'zip_file';
+                hiddenInput.accept = '.zip';
+                hiddenInput.style.display = 'none';
+                const dt = new DataTransfer();
+                dt.items.add(zipFile);
+                hiddenInput.files = dt.files;
+                zipInputContainer.appendChild(hiddenInput);
+            }
+        }
+
+        dropZoneZip.addEventListener('click', () => zipInputHidden.click());
+        zipInputHidden.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                zipFile = e.target.files[0];
+                actualizarListaZip();
+                zipInputHidden.value = '';
+            }
+        });
+        dropZoneZip.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZoneZip.classList.add('drag-over');
+        });
+        dropZoneZip.addEventListener('dragleave', () => dropZoneZip.classList.remove('drag-over'));
+        dropZoneZip.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZoneZip.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                zipFile = e.dataTransfer.files[0];
+                actualizarListaZip();
+            }
+        });
+
+        // ==================== OVERLAY AL ENVIAR FORMULARIO ====================
+        const uploadForm = document.getElementById('uploadForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        uploadForm.addEventListener('submit', function() {
+            loadingOverlay.classList.add('active');
+        });
+
+        // ==================== MODAL DE NOMBRE (fetch para descargar) ====================
+        const nameForm = document.getElementById('nameForm');
+        if (nameForm) {
+            nameForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const nombre = document.getElementById('pdfName').value.trim();
+                if (!nombre) {
+                    alert('Por favor, ingresa un nombre para el PDF.');
+                    return;
+                }
+
+                loadingOverlay.classList.add('active');
+                document.getElementById('nameModal').classList.remove('active');
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                fetch("{% url 'merge_zip' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({ nombre: nombre })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        loadingOverlay.classList.remove('active');
+                        return;
+                    }
+                    // Redirigir a la URL de descarga
+                    window.location.href = data.download_url;
+                    setTimeout(() => {
+                        loadingOverlay.classList.remove('active');
+                        mostrarModalExito();
+                    }, 1500);
+                })
+                .catch(err => {
+                    alert('Error al procesar la solicitud.');
+                    loadingOverlay.classList.remove('active');
+                });
+            });
+        }
+
+        function cerrarModalNombre() {
+            document.getElementById('nameModal').classList.remove('active');
+        }
+
+        // ==================== MODAL DE ÉXITO ====================
+        function mostrarModalExito() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('active');
+            setTimeout(() => modal.classList.remove('active'), 2000);
+        }
+        function cerrarModalExito() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        // Inicializar listas vacías al cargar
+        actualizarListaPdfs();
+        actualizarListaZip();
+    </script>
+</body>
+</html>
