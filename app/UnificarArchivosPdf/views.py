@@ -222,3 +222,17 @@ def generate_named_pdf(request, record_index):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         response['Access-Control-Expose-Headers'] = 'Content-Disposition'
         return response
+
+
+#=============================================================
+#END-POINT DE MANTENER SERVICIO PRENDIDO 
+#=============================================================
+
+# mi_app/views.py
+from django.http import HttpResponse
+
+def health_check(request):
+    """
+    Endpoint de salud sin autenticación para recibir pings.
+    """
+    return HttpResponse("OK", content_type="text/plain")
